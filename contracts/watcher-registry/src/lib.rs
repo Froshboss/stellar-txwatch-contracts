@@ -14,6 +14,9 @@ pub const MAX_BATCH_SIZE: u32 = 20;
 /// Maximum number of watchers that may be registered at once.
 pub const MAX_WATCHERS: u32 = 1_000;
 
+/// Maximum page size accepted by `get_all_watchers_paginated`.
+pub const MAX_PAGE_LIMIT: u32 = 100;
+
 // ── Errors ────────────────────────────────────────────────────────────────────
 
 #[contracterror]
