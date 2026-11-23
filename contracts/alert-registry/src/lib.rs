@@ -4215,5 +4215,65 @@ mod tests {
         assert_eq!(c.get_alerts_updated_since(&t, &200, &0, &1).len(), 1);
         assert_eq!(c.get_alerts_updated_since(&t, &201, &0, &10).len(), 0);
     }
+
+    #[test]
+    fn test_propose_webhook_and_confirm_webhook_two_step_rotation() {
+        let (env, c) = setup();
+        let owner = Address::generate(&env);
+        let target = Address::generate(&env);
+        
+        let id = reg(&env, &c, &owner, &target, None);
+        let cfg = c.get_alert(&id).unwrap();
+        let original_hash = cfg.webhook_hash.clone();
+        
+        // After propose_webhook, webhook_hash unchanged, pending_webhook_hash populated
+        let new_hash = str(&env, "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+        c.propose_webhook(&owner, &id, &new_hash);
+        let cfg = c.get_alert(&id).unwrap();
+        assert_eq!(cfg.webhook_hash, original_hash);
+        assert_eq!(cfg.pending_webhook_hash, Some(new_hash.clone()));
+        
+        // After confirm_webhook, webhook_hash equals the new hash, pending_webhook_hash is None
+        c.confirm_webhook(&owner, &id);
+        let cfg = c.get_alert(&id).unwrap();
+        assert_eq!(cfg.webhook_hash, new_hash);
+        assert_eq!(cfg.pending_webhook_hash, None);
+        
+        // Calling confirm_webhook without a prior propose_webhook returns ContractError::NoPendingWebhook
+        assert_eq!(
+            c.try_confirm_webhook(&owner, &id),
+            Err(Ok(ContractError::NoPendingWebhook))
+        );
+    }
+
+    #[test]
+    fn test_transfer_alert_ownership_respects_new_owner_limit() {
+        let (env, c) = setup();
+        let admin = Address::generate(&env);
+        let owner = Address::generate(&env);
+        let new_owner = Address::generate(&env);
+        let target = Address::generate(&env);
+        
+        c.initialize(&admin);
+        c.set_per_owner_alert_limit(&admin, &1u32);
+        
+        // Register one alert for new_owner
+        let id1 = reg(&env, &c, &new_owner, &target, None);
+        
+        // Register a second alert for owner
+        let id2 = reg(&env, &c, &owner, &target, None);
+        
+        // Attempt to transfer the second alert to new_owner, who is already at their limit
+        assert_eq!(
+            c.try_transfer_alert_ownership(&owner, &id2, &new_owner),
+            Err(Ok(ContractError::OwnerAlertLimitExceeded))
+        );
+        
+        // Verify no transfer occurred
+        let cfg = c.get_alert(&id2).unwrap();
+        assert_eq!(cfg.owner, owner);
+        assert_eq!(c.get_alerts_by_owner(&new_owner, &new_owner).len(), 1);
+        assert_eq!(c.get_alerts_by_owner(&owner, &owner).len(), 1);
+    }
 }
 
