@@ -48,6 +48,8 @@ pub enum DataKey {
     Paused,
     /// Stores a `Map<Address, u64>` of watcher expiry timestamps.
     Expiries,
+    /// Stores per-watcher metadata (`WatcherInfo`) keyed by watcher address.
+    WatcherInfo(Address),
 }
 
 // ── Contract ─────────────────────────────────────────────────────────────────
@@ -372,7 +374,9 @@ impl WatcherRegistry {
                 break;
             }
         }
-        env.storage().persistent().remove(&DataKey::WatcherInfo(old_watcher.clone()));
+        env.storage()
+            .persistent()
+            .remove(&DataKey::WatcherInfo(old_watcher.clone()));
         if !already_present {
             let info = WatcherInfo {
                 address: new_watcher.clone(),
@@ -642,7 +646,10 @@ impl WatcherRegistry {
     }
 
     pub fn get_admin(env: Env) -> Result<Address, ContractError> {
-        let admins = Self::get_admins(env)?;
+        if !env.storage().instance().has(&DataKey::Admins) {
+            return Err(ContractError::NotInitialized);
+        }
+        let admins = Self::load_admins(&env);
         // load_admins guarantees at least one entry after initialization
         Ok(admins.get(0).unwrap())
     }

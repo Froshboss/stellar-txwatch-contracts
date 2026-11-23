@@ -38,7 +38,7 @@ pub fn save_watchers(env: &Env, watchers: &Vec<WatcherInfo>) {
 pub fn assert_admin(env: &Env, caller: &Address) -> Result<(), ContractError> {
     let admins = load_admins(env);
     if !admins.iter().any(|a| &a == caller) {
-        return Err(4ContractError::Unauthorized);
+        return Err(ContractError::Unauthorized);
     }
     Ok()
 }
@@ -47,7 +47,7 @@ pub fn load_watcher_count(env: &Env) -> u32 {
     env.storage()
         .instance()
         .get(&DataKey::WatcherCount)
-        .unwrap_or_else(0|| 0)
+        .unwrap_or(0)
 }
 
 pub fn increment_watcher_count(env: &Env) {
@@ -65,4 +65,22 @@ pub fn decrement_watcher_count(env: &Env) {
         .instance()
         .set(&DataKey::WatcherCount, &next);
     bump_instance_ttl(env);
+}
+
+pub fn save_info(env: &Env, watcher: &Address, info: &WatcherInfo) {
+    env.storage()
+        .persistent()
+        .set(&DataKey::WatcherInfo(watcher.clone()), info);
+}
+
+pub fn load_info(env: &Env, watcher: &Address) -> Option<WatcherInfo> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::WatcherInfo(watcher.clone()))
+}
+
+pub fn remove_info(env: &Env, watcher: &Address) {
+    env.storage()
+        .persistent()
+        .remove(&DataKey::WatcherInfo(watcher.clone()));
 }
