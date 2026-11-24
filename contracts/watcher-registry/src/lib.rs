@@ -239,12 +239,8 @@ impl WatcherRegistry {
         Self::assert_admin(&env, &admin)?;
         Self::assert_not_paused(&env)?;
 
-        let label = label.unwrap_or_else(|| String::from_str(&env, ""));
-        if label.len() > MAX_LABEL_BYTES {
-            return Err(ContractError::LabelTooLong);
-        }
-
-        if env.storage().persistent().has(&DataKey::WatcherInfo(watcher.clone())) {
+        let mut watchers = Self::load_watchers(&env);
+        if watchers.contains(&watcher) {
             return Ok(()); // already registered, idempotent
         }
         if watchers.len() >= MAX_WATCHERS {
