@@ -33,6 +33,8 @@ pub enum ContractError {
     BatchTooLarge = 7,
     /// Returned when registration would exceed [`MAX_WATCHERS`].
     WatcherLimitExceeded = 8,
+    /// Returned when transferring admin would discard members of a multi-admin set.
+    MultipleAdminsExist = 9,
 }
 
 // ── Storage keys ─────────────────────────────────────────────────────────────
