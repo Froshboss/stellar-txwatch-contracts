@@ -3315,6 +3315,22 @@ mod tests {
         assert_eq!(results.len(), 2);
     }
 
+    // Scan and count must read the same NEXT_ID counter, so a registry with
+    // three alerts reports three from both get_alert_count and the scan.
+    #[test]
+    fn test_get_alerts_modified_since_agrees_with_alert_count() {
+        let (env, client) = setup();
+        let owner = Address::generate(&env);
+        let target = Address::generate(&env);
+
+        for label in ["A", "B", "C"] {
+            client.register_alert(&owner, &target, &str(&env, label), &hash64(&env), &vec![&env, str(&env, "rule:transfer")], &None);
+        }
+
+        assert_eq!(client.get_alert_count(), 3);
+        assert_eq!(client.get_alerts_modified_since(&0u64).len(), 3);
+    }
+
     // 19. Returns empty vec when no alerts exist
     #[test]
     fn test_get_alerts_modified_since_empty_registry() {
