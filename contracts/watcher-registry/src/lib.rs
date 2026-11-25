@@ -32,6 +32,9 @@ pub const MAX_LABEL_BYTES: u32 = 64;
 /// Maximum page size for paginated watcher reads.
 pub const MAX_PAGE_LIMIT: u32 = 50;
 
+/// Maximum page size accepted by `get_all_watchers_paginated`.
+pub const MAX_PAGE_LIMIT: u32 = 100;
+
 // ── Errors ────────────────────────────────────────────────────────────────────
 
 #[contracterror]
