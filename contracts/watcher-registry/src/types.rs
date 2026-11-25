@@ -45,6 +45,7 @@ pub struct WatcherInfo {
 
 /// Storage key variants used to address instance and persistent entries.
 #[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DataKey {
     /// Stores the `Vec<Address>` of current admins.
     Admins,
@@ -58,4 +59,16 @@ pub enum DataKey {
     Expiries,
     /// Stores the [`WatcherInfo`] record for a single watcher (persistent).
     WatcherInfo(Address),
+}
+
+// ── Data structures ──────────────────────────────────────────────────────────
+
+/// Information associated with a registered watcher.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct WatcherInfo {
+    /// The watcher's address.
+    pub address: Address,
+    /// Ledger sequence at which the watcher's registration expires.
+    pub expiry: u32,
 }

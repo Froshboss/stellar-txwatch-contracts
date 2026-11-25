@@ -185,3 +185,21 @@ mod tests {
         assert_eq!(new_ids.get(0).unwrap(), alert_id);
     }
 }
+
+pub fn save_info(env: &Env, watcher: &Address, info: &WatcherInfo) {
+    env.storage()
+        .persistent()
+        .set(&DataKey::WatcherInfo(watcher.clone()), info);
+}
+
+pub fn load_info(env: &Env, watcher: &Address) -> Option<WatcherInfo> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::WatcherInfo(watcher.clone()))
+}
+
+pub fn remove_info(env: &Env, watcher: &Address) {
+    env.storage()
+        .persistent()
+        .remove(&DataKey::WatcherInfo(watcher.clone()));
+}

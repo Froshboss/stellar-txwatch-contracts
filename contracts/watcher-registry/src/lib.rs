@@ -719,7 +719,10 @@ impl WatcherRegistry {
     }
 
     pub fn get_admin(env: Env) -> Result<Address, ContractError> {
-        let admins = Self::get_admins(env)?;
+        if !env.storage().instance().has(&DataKey::Admins) {
+            return Err(ContractError::NotInitialized);
+        }
+        let admins = Self::load_admins(&env);
         // load_admins guarantees at least one entry after initialization
         Ok(admins.get(0).unwrap())
     }
